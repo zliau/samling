@@ -281,7 +281,8 @@ $(function() {
         .trim(),
       nameIdentifier: $("#nameIdentifier")
         .val()
-        .trim()
+        .trim(),
+      lifetimeInSeconds: 6000
     };
     var assertion = window.SAML.createAssertion(options);
     var callbackUrl = $("#callbackUrl")
