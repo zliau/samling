@@ -90,6 +90,11 @@ $(function() {
       } catch (e) {
         $("#signedInAt").text("ERROR: " + e.message);
       }
+    } else {
+      // generate random issuer on first load
+      $("#issuer").val(
+        "http://zliau.com/issuer/" + Math.floor(Math.random() * 100000000)
+      );
     }
   });
 

@@ -7,7 +7,7 @@ Serverless (as in "client side only") SAML IDP for testing SAML integrations.
 
 ## See it Live
 
-Visit https://capriza.github.io/samling/samling.html to see it in action.
+Visit https://zliau.github.io/samling/samling.html to see it in action.
 
 ## What is SAMLING
 
@@ -39,7 +39,7 @@ You'll end up with a `public` directory with all the required assets for loading
 
 ## How to Use
 
-1. Open up `https://capriza.github.io/samling/samling.html`. You'll land on the **SAML Response Properties** section.
+1. Open up `https://zliau.github.io/samling/samling.html`. You'll land on the **SAML Response Properties** section.
 2. Fill in the required properties fields. Required fields are marked with an asterisks (*).
    * `Name Identifier` - the user name
    * `Callback URL` - where to send the SAML response
