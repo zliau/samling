@@ -46421,9 +46421,10 @@ var SignedXml = require("xml-crypto").SignedXml;
 var samlp = "<saml:Assertion xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\" Version=\"2.0\" ID=\"\" IssueInstant=\"\">\n  <saml:Issuer></saml:Issuer>\n  <saml:Subject>\n    <saml:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\" />\n    <saml:SubjectConfirmation Method=\"urn:oasis:names:tc:SAML:2.0:cm:bearer\">\n      <saml:SubjectConfirmationData />\n    </saml:SubjectConfirmation>\n  </saml:Subject>\n  <saml:Conditions>\n  </saml:Conditions>\n  <saml:AuthnStatement AuthnInstant=\"\">\n    <saml:AuthnContext>\n      <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified</saml:AuthnContextClassRef>\n    </saml:AuthnContext>\n  </saml:AuthnStatement>\n</saml:Assertion>\n";
 
 function pemToCert(pem) {
-  var cert = /-----BEGIN CERTIFICATE-----([^-]*)-----END CERTIFICATE-----/g.exec(
-    pem.toString()
-  );
+  var cert =
+    /-----BEGIN CERTIFICATE-----([^-]*)-----END CERTIFICATE-----/g.exec(
+      pem.toString()
+    );
   if (cert.length > 0) {
     return cert[1].replace(/[\n|\r\n]/g, "");
   }
@@ -46445,19 +46446,19 @@ var SAMLP_NS = "urn:oasis:names:tc:SAML:2.0:protocol";
 var algorithms = {
   signature: {
     "rsa-sha256": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-    "rsa-sha1": "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+    "rsa-sha1": "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
   },
   digest: {
     sha256: "http://www.w3.org/2001/04/xmlenc#sha256",
-    sha1: "http://www.w3.org/2000/09/xmldsig#sha1"
-  }
+    sha1: "http://www.w3.org/2000/09/xmldsig#sha1",
+  },
 };
 
-exports.parseRequest = function(options, request, callback) {
+exports.parseRequest = function (options, request, callback) {
   options.issuer = options.issuer || "http://capriza.com/samling";
   request = decodeURIComponent(request);
   var buffer = new Buffer(request, "base64");
-  zlib.inflateRaw(buffer, function(err, result) {
+  zlib.inflateRaw(buffer, function (err, result) {
     var info = {};
     try {
       if (!err) {
@@ -46467,11 +46468,9 @@ exports.parseRequest = function(options, request, callback) {
       var rootElement = doc.documentElement;
       if (rootElement.localName == "AuthnRequest") {
         info.login = {};
-        // HACK!!!!!
-        // info.login.callbackUrl = rootElement.getAttribute(
-        //   "AssertionConsumerServiceURL"
-        // );
-        info.login.callbackUrl = "http://localhost/auth/saml";
+        info.login.callbackUrl = rootElement.getAttribute(
+          "AssertionConsumerServiceURL"
+        );
         info.login.destination = rootElement.getAttribute("Destination");
         var nameIDPolicy = rootElement.getElementsByTagNameNS(
           SAMLP_NS,
@@ -46485,10 +46484,11 @@ exports.parseRequest = function(options, request, callback) {
           "RequestedAuthnContext"
         )[0];
         if (requestedAuthnContext) {
-          var authnContextClassRef = requestedAuthnContext.getElementsByTagNameNS(
-            ASSERTION_NS,
-            "AuthnContextClassRef"
-          )[0];
+          var authnContextClassRef =
+            requestedAuthnContext.getElementsByTagNameNS(
+              ASSERTION_NS,
+              "AuthnContextClassRef"
+            )[0];
           if (authnContextClassRef) {
             info.login.authnContextClassRef = authnContextClassRef.textContent;
           }
@@ -46516,7 +46516,7 @@ exports.parseRequest = function(options, request, callback) {
   });
 };
 
-exports.createAssertion = function(options) {
+exports.createAssertion = function (options) {
   if (!options.key) throw new Error("Expecting a private key in pem format");
 
   if (!options.cert)
@@ -46561,7 +46561,7 @@ exports.createAssertion = function(options) {
       options.audiences instanceof Array
         ? options.audiences
         : [options.audiences];
-    audiences.forEach(function(audience) {
+    audiences.forEach(function (audience) {
       var element = doc.createElementNS(ASSERTION_NS, "saml:Audience");
       element.textContent = audience;
       audienceRestrictionsElement.appendChild(element);
@@ -46585,7 +46585,7 @@ exports.createAssertion = function(options) {
       "xmlns:xsi",
       "http://www.w3.org/2001/XMLSchema-instance"
     );
-    Object.keys(options.attributes).forEach(function(prop) {
+    Object.keys(options.attributes).forEach(function (prop) {
       if (typeof options.attributes[prop] === "undefined") return;
       var attributeElement = doc.createElementNS(
         ASSERTION_NS,
@@ -46596,7 +46596,7 @@ exports.createAssertion = function(options) {
         options.attributes[prop] instanceof Array
           ? options.attributes[prop]
           : [options.attributes[prop]];
-      values.forEach(function(value) {
+      values.forEach(function (value) {
         var valueElement = doc.createElementNS(
           ASSERTION_NS,
           "saml:AttributeValue"
@@ -46651,19 +46651,19 @@ exports.createAssertion = function(options) {
 
   var sig = new SignedXml(null, {
     signatureAlgorithm: algorithms.signature[options.signatureAlgorithm],
-    idAttribute: "ID"
+    idAttribute: "ID",
   });
   sig.signingKey = options.key;
   sig.addReference(
     "//*[local-name(.)='Assertion']",
     [
       "http://www.w3.org/2000/09/xmldsig#enveloped-signature",
-      "http://www.w3.org/2001/10/xml-exc-c14n#"
+      "http://www.w3.org/2001/10/xml-exc-c14n#",
     ],
     algorithms.digest[options.digestAlgorithm]
   );
   sig.keyInfoProvider = {
-    getKeyInfo: function(key, prefix) {
+    getKeyInfo: function (key, prefix) {
       return (
         "<" +
         prefix +
@@ -46677,18 +46677,18 @@ exports.createAssertion = function(options) {
         prefix +
         ":X509Data>"
       );
-    }
+    },
   };
   sig.computeSignature(token, {
     prefix: "ds",
-    location: { action: "after", reference: "//*[local-name(.)='Issuer']" }
+    location: { action: "after", reference: "//*[local-name(.)='Issuer']" },
   });
   signed = sig.getSignedXml();
 
   return signed;
 };
 
-exports.createResponse = function(options) {
+exports.createResponse = function (options) {
   var response =
     '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Version="2.0"';
   response += ' ID="_' + crypto.randomBytes(21).toString("hex") + '"';
