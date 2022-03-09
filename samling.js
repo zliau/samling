@@ -170,10 +170,10 @@ $(function() {
     generateKeyAndCert();
   } else {
     $("#signatureCert").val(
-      localStorage.getItem("certVal") || fs.readFileSync("./cert.pem")
+      localStorage.getItem("certVal")
     );
     $("#signatureKey").val(
-      localStorage.getItem("privateKeyVal") || fs.readFileSync("./key.pem")
+      localStorage.getItem("privateKeyVal")
     );
   }
 
