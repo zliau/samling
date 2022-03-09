@@ -61,16 +61,129 @@ function handleRequest(request) {
   );
 }
 
+function generateKeyAndCert() {
+  var pki = window.forge.pki;
+  var keypair = pki.rsa.generateKeyPair({ bits: 1024 });
+  var cert = pki.createCertificate();
+  cert.publicKey = keypair.publicKey;
+  cert.serialNumber = "01";
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(
+    cert.validity.notBefore.getFullYear() + 1
+  );
+  var attrs = [
+    {
+      name: "commonName",
+      value: "capriza.com"
+    },
+    {
+      name: "countryName",
+      value: "US"
+    },
+    {
+      shortName: "ST",
+      value: "Virginia"
+    },
+    {
+      name: "localityName",
+      value: "Blacksburg"
+    },
+    {
+      name: "organizationName",
+      value: "Samling"
+    },
+    {
+      shortName: "OU",
+      value: "Samling"
+    }
+  ];
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+  cert.setExtensions([
+    {
+      name: "basicConstraints",
+      cA: true
+    },
+    {
+      name: "keyUsage",
+      keyCertSign: true,
+      digitalSignature: true,
+      nonRepudiation: true,
+      keyEncipherment: true,
+      dataEncipherment: true
+    },
+    {
+      name: "extKeyUsage",
+      serverAuth: true,
+      clientAuth: true,
+      codeSigning: true,
+      emailProtection: true,
+      timeStamping: true
+    },
+    {
+      name: "nsCertType",
+      client: true,
+      server: true,
+      email: true,
+      objsign: true,
+      sslCA: true,
+      emailCA: true,
+      objCA: true
+    },
+    {
+      name: "subjectAltName",
+      altNames: [
+        {
+          type: 6, // URI
+          value: "http://capriza.com/samling"
+        }
+      ]
+    },
+    {
+      name: "subjectKeyIdentifier"
+    }
+  ]);
+  // self-sign certificate
+  cert.sign(keypair.privateKey);
+  // convert to PEM
+  var certVal = pki.certificateToPem(cert);
+  var privateKeyVal = pki.privateKeyToPem(keypair.privateKey);
+  $("#signatureCert").val(certVal);
+  $("#signatureKey").val(privateKeyVal);
+
+  localStorage.setItem(
+    "certVal",
+    certVal
+  );
+  localStorage.setItem(
+    "privateKeyVal",
+    privateKeyVal
+  );
+}
+
 $(function() {
   $('[data-toggle="tooltip"]').tooltip();
   $('[data-toggle="popover"]').popover();
 
-  $("#signatureCert").val(
-    localStorage.getItem("certVal") || fs.readFileSync("./cert.pem")
-  );
-  $("#signatureKey").val(
-    localStorage.getItem("privateKeyVal") || fs.readFileSync("./key.pem")
-  );
+  if (!localStorage.getItem("certVal") || !localStorage.getItem("privateKeyVal")) {
+    generateKeyAndCert();
+  } else {
+    $("#signatureCert").val(
+      localStorage.getItem("certVal") || fs.readFileSync("./cert.pem")
+    );
+    $("#signatureKey").val(
+      localStorage.getItem("privateKeyVal") || fs.readFileSync("./key.pem")
+    );
+  }
+
+  let issuer = localStorage.getItem("issuer");
+  if (!issuer) {
+    // generate random issuer on first load
+    issuer = "http://zliau.com/issuer/" + Math.floor(Math.random() * 100000000)
+    localStorage.setItem("issuer", issuer);
+  }
+  $("#issuer").val(issuer);
 
   var userControl = $("#signedInUser");
   var cookies = document.cookie.split(";");
@@ -84,17 +197,11 @@ $(function() {
         $("#signedInAt").text(data.signedInAt);
         $("#nameIdentifier").val(data.nameIdentifier);
         $("#callbackUrl").val(data.callbackUrl);
-        $("#issuer").val(data.issuer);
         $("#authnContextClassRef").val(data.authnContextClassRef);
         $("#nameIdentifierFormat").val(data.nameIdentifierFormat);
       } catch (e) {
         $("#signedInAt").text("ERROR: " + e.message);
       }
-    } else {
-      // generate random issuer on first load
-      $("#issuer").val(
-        "http://zliau.com/issuer/" + Math.floor(Math.random() * 100000000)
-      );
     }
   });
 
@@ -110,97 +217,7 @@ $(function() {
     logout();
   });
 
-  $("#generateKeyAndCert").click(function() {
-    var pki = window.forge.pki;
-    var keypair = pki.rsa.generateKeyPair({ bits: 1024 });
-    var cert = pki.createCertificate();
-    cert.publicKey = keypair.publicKey;
-    cert.serialNumber = "01";
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setFullYear(
-      cert.validity.notBefore.getFullYear() + 1
-    );
-    var attrs = [
-      {
-        name: "commonName",
-        value: "capriza.com"
-      },
-      {
-        name: "countryName",
-        value: "US"
-      },
-      {
-        shortName: "ST",
-        value: "Virginia"
-      },
-      {
-        name: "localityName",
-        value: "Blacksburg"
-      },
-      {
-        name: "organizationName",
-        value: "Samling"
-      },
-      {
-        shortName: "OU",
-        value: "Samling"
-      }
-    ];
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.setExtensions([
-      {
-        name: "basicConstraints",
-        cA: true
-      },
-      {
-        name: "keyUsage",
-        keyCertSign: true,
-        digitalSignature: true,
-        nonRepudiation: true,
-        keyEncipherment: true,
-        dataEncipherment: true
-      },
-      {
-        name: "extKeyUsage",
-        serverAuth: true,
-        clientAuth: true,
-        codeSigning: true,
-        emailProtection: true,
-        timeStamping: true
-      },
-      {
-        name: "nsCertType",
-        client: true,
-        server: true,
-        email: true,
-        objsign: true,
-        sslCA: true,
-        emailCA: true,
-        objCA: true
-      },
-      {
-        name: "subjectAltName",
-        altNames: [
-          {
-            type: 6, // URI
-            value: "http://capriza.com/samling"
-          }
-        ]
-      },
-      {
-        name: "subjectKeyIdentifier"
-      }
-    ]);
-    // self-sign certificate
-    cert.sign(keypair.privateKey);
-    // convert to PEM
-    var certVal = pki.certificateToPem(cert);
-    var privateKeyVal = pki.privateKeyToPem(keypair.privateKey);
-    $("#signatureCert").val(certVal);
-    $("#signatureKey").val(privateKeyVal);
-  });
+  $("#generateKeyAndCert").click(generateKeyAndCert);
 
   $("#saveKeyAndCert").click(function() {
     localStorage.setItem(

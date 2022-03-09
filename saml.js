@@ -44,7 +44,7 @@ var algorithms = {
 };
 
 exports.parseRequest = function (options, request, callback) {
-  options.issuer = options.issuer || "http://capriza.com/samling";
+  options.issuer = options.issuer || "http://zliau.com/samling";
   request = decodeURIComponent(request);
   var buffer = new Buffer(request, "base64");
   zlib.inflateRaw(buffer, function (err, result) {

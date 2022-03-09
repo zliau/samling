@@ -23552,49 +23552,36 @@ utils.intFromLE = intFromLE;
 arguments[4][15][0].apply(exports,arguments)
 },{"buffer":23,"dup":15}],109:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@^6.5.3",
-  "_id": "elliptic@6.5.4",
-  "_inBundle": false,
-  "_integrity": "sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==",
-  "_location": "/elliptic",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "elliptic@^6.5.3",
-    "name": "elliptic",
-    "escapedName": "elliptic",
-    "rawSpec": "^6.5.3",
-    "saveSpec": null,
-    "fetchSpec": "^6.5.3"
-  },
-  "_requiredBy": [
-    "/browserify-sign",
-    "/create-ecdh"
+  "name": "elliptic",
+  "version": "6.5.4",
+  "description": "EC cryptography",
+  "main": "lib/elliptic.js",
+  "files": [
+    "lib"
   ],
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.5.4.tgz",
-  "_shasum": "da37cebd31e79a1367e941b592ed1fbebd58abbb",
-  "_spec": "elliptic@^6.5.3",
-  "_where": "/home/zliau/workspaces/samling/node_modules/browserify-sign",
-  "author": {
-    "name": "Fedor Indutny",
-    "email": "fedor@indutny.com"
+  "scripts": {
+    "lint": "eslint lib test",
+    "lint:fix": "npm run lint -- --fix",
+    "unit": "istanbul test _mocha --reporter=spec test/index.js",
+    "test": "npm run lint && npm run unit",
+    "version": "grunt dist && git add dist/"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:indutny/elliptic"
+  },
+  "keywords": [
+    "EC",
+    "Elliptic",
+    "curve",
+    "Cryptography"
+  ],
+  "author": "Fedor Indutny <fedor@indutny.com>",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "bundleDependencies": false,
-  "dependencies": {
-    "bn.js": "^4.11.9",
-    "brorand": "^1.1.0",
-    "hash.js": "^1.0.0",
-    "hmac-drbg": "^1.0.1",
-    "inherits": "^2.0.4",
-    "minimalistic-assert": "^1.0.1",
-    "minimalistic-crypto-utils": "^1.0.1"
-  },
-  "deprecated": false,
-  "description": "EC cryptography",
+  "homepage": "https://github.com/indutny/elliptic",
   "devDependencies": {
     "brfs": "^2.0.2",
     "coveralls": "^3.1.0",
@@ -23610,31 +23597,15 @@ module.exports={
     "istanbul": "^0.4.5",
     "mocha": "^8.0.1"
   },
-  "files": [
-    "lib"
-  ],
-  "homepage": "https://github.com/indutny/elliptic",
-  "keywords": [
-    "EC",
-    "Elliptic",
-    "curve",
-    "Cryptography"
-  ],
-  "license": "MIT",
-  "main": "lib/elliptic.js",
-  "name": "elliptic",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/indutny/elliptic.git"
-  },
-  "scripts": {
-    "lint": "eslint lib test",
-    "lint:fix": "npm run lint -- --fix",
-    "test": "npm run lint && npm run unit",
-    "unit": "istanbul test _mocha --reporter=spec test/index.js",
-    "version": "grunt dist && git add dist/"
-  },
-  "version": "6.5.4"
+  "dependencies": {
+    "bn.js": "^4.11.9",
+    "brorand": "^1.1.0",
+    "hash.js": "^1.0.0",
+    "hmac-drbg": "^1.0.1",
+    "inherits": "^2.0.4",
+    "minimalistic-assert": "^1.0.1",
+    "minimalistic-crypto-utils": "^1.0.1"
+  }
 }
 
 },{}],110:[function(require,module,exports){
@@ -46455,7 +46426,7 @@ var algorithms = {
 };
 
 exports.parseRequest = function (options, request, callback) {
-  options.issuer = options.issuer || "http://capriza.com/samling";
+  options.issuer = options.issuer || "http://zliau.com/samling";
   request = decodeURIComponent(request);
   var buffer = new Buffer(request, "base64");
   zlib.inflateRaw(buffer, function (err, result) {
@@ -46780,16 +46751,129 @@ function handleRequest(request) {
   );
 }
 
+function generateKeyAndCert() {
+  var pki = window.forge.pki;
+  var keypair = pki.rsa.generateKeyPair({ bits: 1024 });
+  var cert = pki.createCertificate();
+  cert.publicKey = keypair.publicKey;
+  cert.serialNumber = "01";
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(
+    cert.validity.notBefore.getFullYear() + 1
+  );
+  var attrs = [
+    {
+      name: "commonName",
+      value: "capriza.com"
+    },
+    {
+      name: "countryName",
+      value: "US"
+    },
+    {
+      shortName: "ST",
+      value: "Virginia"
+    },
+    {
+      name: "localityName",
+      value: "Blacksburg"
+    },
+    {
+      name: "organizationName",
+      value: "Samling"
+    },
+    {
+      shortName: "OU",
+      value: "Samling"
+    }
+  ];
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+  cert.setExtensions([
+    {
+      name: "basicConstraints",
+      cA: true
+    },
+    {
+      name: "keyUsage",
+      keyCertSign: true,
+      digitalSignature: true,
+      nonRepudiation: true,
+      keyEncipherment: true,
+      dataEncipherment: true
+    },
+    {
+      name: "extKeyUsage",
+      serverAuth: true,
+      clientAuth: true,
+      codeSigning: true,
+      emailProtection: true,
+      timeStamping: true
+    },
+    {
+      name: "nsCertType",
+      client: true,
+      server: true,
+      email: true,
+      objsign: true,
+      sslCA: true,
+      emailCA: true,
+      objCA: true
+    },
+    {
+      name: "subjectAltName",
+      altNames: [
+        {
+          type: 6, // URI
+          value: "http://capriza.com/samling"
+        }
+      ]
+    },
+    {
+      name: "subjectKeyIdentifier"
+    }
+  ]);
+  // self-sign certificate
+  cert.sign(keypair.privateKey);
+  // convert to PEM
+  var certVal = pki.certificateToPem(cert);
+  var privateKeyVal = pki.privateKeyToPem(keypair.privateKey);
+  $("#signatureCert").val(certVal);
+  $("#signatureKey").val(privateKeyVal);
+
+  localStorage.setItem(
+    "certVal",
+    certVal
+  );
+  localStorage.setItem(
+    "privateKeyVal",
+    privateKeyVal
+  );
+}
+
 $(function() {
   $('[data-toggle="tooltip"]').tooltip();
   $('[data-toggle="popover"]').popover();
 
-  $("#signatureCert").val(
-    localStorage.getItem("certVal") || Buffer("LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURDVENDQW5LZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRVUZBREJ2TVJRd0VnWURWUVFERXd0allYQnkKYVhwaExtTnZiVEVMTUFrR0ExVUVCaE1DVlZNeEVUQVBCZ05WQkFnVENGWnBjbWRwYm1saE1STXdFUVlEVlFRSApFd3BDYkdGamEzTmlkWEpuTVJBd0RnWURWUVFLRXdkVFlXMXNhVzVuTVJBd0RnWURWUVFMRXdkVFlXMXNhVzVuCk1CNFhEVEl4TURNeU5USXhNRFF6TjFvWERUSXlNRE15TlRJeE1EUXpOMW93YnpFVU1CSUdBMVVFQXhNTFkyRncKY21sNllTNWpiMjB4Q3pBSkJnTlZCQVlUQWxWVE1SRXdEd1lEVlFRSUV3aFdhWEpuYVc1cFlURVRNQkVHQTFVRQpCeE1LUW14aFkydHpZblZ5WnpFUU1BNEdBMVVFQ2hNSFUyRnRiR2x1WnpFUU1BNEdBMVVFQ3hNSFUyRnRiR2x1Clp6Q0JuekFOQmdrcWhraUc5dzBCQVFFRkFBT0JqUUF3Z1lrQ2dZRUFpT3JEUG5OYUk3TXBURDNmQnUzdnJvY24KR0xrNWdhaXlaQlRNQWtIbFg3VDlydWpISmc1R0NrSTh6blRRNmlUaU9KYVAzcVBqdU80K1lMcU5DOFVuK05vMwppWFVqbERWVzE3YlY1KzZhM3d1TjgrQmR3NDNUeld3Lzd1TUhKejd6ekZNckswd2c0bWViQlBoa2ZuN2xwRjQwCjB4V3FuUmZUbTkrNFBCYzM3NTBDQXdFQUFhT0J0RENCc1RBTUJnTlZIUk1FQlRBREFRSC9NQXNHQTFVZER3UUUKQXdJQzlEQTdCZ05WSFNVRU5EQXlCZ2dyQmdFRkJRY0RBUVlJS3dZQkJRVUhBd0lHQ0NzR0FRVUZCd01EQmdncgpCZ0VGQlFjREJBWUlLd1lCQlFVSEF3Z3dFUVlKWUlaSUFZYjRRZ0VCQkFRREFnRDNNQ1VHQTFVZEVRUWVNQnlHCkdtaDBkSEE2THk5allYQnlhWHBoTG1OdmJTOXpZVzFzYVc1bk1CMEdBMVVkRGdRV0JCVG5OMlo3VWZ1dVlKVnEKbFNqUnNtNkdONHoxWmpBTkJna3Foa2lHOXcwQkFRVUZBQU9CZ1FCdnhUbnVLd3FYejlVTkZNRTZpaWdjR3N6cApTNmlnWTIvV3h1VWpNRUVVNlk0aSttVGt1MVpKUXBiazR3VVJvQmZCeXVtRzZTY3FybzdxT21xRmU5N0kreXBBCmdzL2NIaTgrUmg2bUZqaHgyMEZDVEE3QW95MnV5cy9MaTk0U2kxc3lPKzVmdkR6SHJ0Q0c2QUwxRHlteGZPRW8KYml6STNGbDQ5TEdZOHA2aUVnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=","base64")
-  );
-  $("#signatureKey").val(
-    localStorage.getItem("privateKeyVal") || Buffer("LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlDWEFJQkFBS0JnUUNJNnNNK2Mxb2pzeWxNUGQ4RzdlK3VoeWNZdVRtQnFMSmtGTXdDUWVWZnRQMnU2TWNtCkRrWUtRanpPZE5EcUpPSTRsby9lbytPNDdqNWd1bzBMeFNmNDJqZUpkU09VTlZiWHR0WG43cHJmQzQzejRGM0QKamRQTmJEL3U0d2NuUHZQTVV5c3JUQ0RpWjVzRStHUitmdVdrWGpUVEZhcWRGOU9iMzdnOEZ6ZnZuUUlEQVFBQgpBb0dBU2dBQWlKZFY1NmVrc1hWYlBtYUpQWjRFam9ORnhvTkQ3MzJpQ2JKTjQ1MXg0d0FpNnJtYU4xODNlQ3FBCjQ1d052S0g3bmt5Yi9zNmRYakJWblQvdzZ1a2lLeTVzZUtvSUdhMm1iUVpocFpaU3dDUDljK0FRVW55aHloU1EKWk1vS01JMW1lc3ZhK2pUSlFJZ2JsSXhQLzBPT0VaelJkK3ZqRkYxdUFLZmlzZzBDUVFEeGtQOVJMZWhySUtScApXb045ajkwaFdFWHQvR1lQYXRhMW1qWko0WnAySHFsa0VVaUkzL2hJQ0haOTkrUWVnZkpNdTRtT2RGbUpWeVhQCmYrZnpLckh6QWtFQWtSa01KLzY1N2lCS0J2cDYvZ2VBb0FFSU4rR29yUnJBcVJLSDYySWVyRFNHcHhoRDlDWHkKNkFGYlZicnJ6UFpFOGhyTHJkc2tzWGR2dFBOTXRHYXNMd0pBU1U5WXZKa3pETGZXVFliRG11cDdFSENLb0dQVgowVjM2RlJqYzJ1VVZqRDFYNk45NTVOZ2JzRGlwUlNkaTJvTlROa2cvd2JTN3EzdUFKUTNMSmJmU1V3SkFkcmE3CmoyMkZ5aUo0N3NTNUpHWVhBdEpWV3dNeDhvOVUyZi9qWE41bW9oWkhwU2JoVWp4S1JTLzIvbWwweTdraUo4TnMKcWM0R2MzeDQxTi9LL2o2UzJRSkJBQXhuSEE4aTFzQWJzZG5ZZXZsbGRyVnJUYjNLNnBobVZRWjJ4TTJ5NWY0SgpKOEV6Zkw0MEFDTmtENzhQVTA3c0NDdjF1TXVRVEtNeitKVzJMMzNycDFJPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=","base64")
-  );
+  if (!localStorage.getItem("certVal") || !localStorage.getItem("privateKeyVal")) {
+    generateKeyAndCert();
+  } else {
+    $("#signatureCert").val(
+      localStorage.getItem("certVal") || Buffer("LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURDVENDQW5LZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRVUZBREJ2TVJRd0VnWURWUVFERXd0allYQnkKYVhwaExtTnZiVEVMTUFrR0ExVUVCaE1DVlZNeEVUQVBCZ05WQkFnVENGWnBjbWRwYm1saE1STXdFUVlEVlFRSApFd3BDYkdGamEzTmlkWEpuTVJBd0RnWURWUVFLRXdkVFlXMXNhVzVuTVJBd0RnWURWUVFMRXdkVFlXMXNhVzVuCk1CNFhEVEl4TURNeU5USXhNRFF6TjFvWERUSXlNRE15TlRJeE1EUXpOMW93YnpFVU1CSUdBMVVFQXhNTFkyRncKY21sNllTNWpiMjB4Q3pBSkJnTlZCQVlUQWxWVE1SRXdEd1lEVlFRSUV3aFdhWEpuYVc1cFlURVRNQkVHQTFVRQpCeE1LUW14aFkydHpZblZ5WnpFUU1BNEdBMVVFQ2hNSFUyRnRiR2x1WnpFUU1BNEdBMVVFQ3hNSFUyRnRiR2x1Clp6Q0JuekFOQmdrcWhraUc5dzBCQVFFRkFBT0JqUUF3Z1lrQ2dZRUFpT3JEUG5OYUk3TXBURDNmQnUzdnJvY24KR0xrNWdhaXlaQlRNQWtIbFg3VDlydWpISmc1R0NrSTh6blRRNmlUaU9KYVAzcVBqdU80K1lMcU5DOFVuK05vMwppWFVqbERWVzE3YlY1KzZhM3d1TjgrQmR3NDNUeld3Lzd1TUhKejd6ekZNckswd2c0bWViQlBoa2ZuN2xwRjQwCjB4V3FuUmZUbTkrNFBCYzM3NTBDQXdFQUFhT0J0RENCc1RBTUJnTlZIUk1FQlRBREFRSC9NQXNHQTFVZER3UUUKQXdJQzlEQTdCZ05WSFNVRU5EQXlCZ2dyQmdFRkJRY0RBUVlJS3dZQkJRVUhBd0lHQ0NzR0FRVUZCd01EQmdncgpCZ0VGQlFjREJBWUlLd1lCQlFVSEF3Z3dFUVlKWUlaSUFZYjRRZ0VCQkFRREFnRDNNQ1VHQTFVZEVRUWVNQnlHCkdtaDBkSEE2THk5allYQnlhWHBoTG1OdmJTOXpZVzFzYVc1bk1CMEdBMVVkRGdRV0JCVG5OMlo3VWZ1dVlKVnEKbFNqUnNtNkdONHoxWmpBTkJna3Foa2lHOXcwQkFRVUZBQU9CZ1FCdnhUbnVLd3FYejlVTkZNRTZpaWdjR3N6cApTNmlnWTIvV3h1VWpNRUVVNlk0aSttVGt1MVpKUXBiazR3VVJvQmZCeXVtRzZTY3FybzdxT21xRmU5N0kreXBBCmdzL2NIaTgrUmg2bUZqaHgyMEZDVEE3QW95MnV5cy9MaTk0U2kxc3lPKzVmdkR6SHJ0Q0c2QUwxRHlteGZPRW8KYml6STNGbDQ5TEdZOHA2aUVnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=","base64")
+    );
+    $("#signatureKey").val(
+      localStorage.getItem("privateKeyVal") || Buffer("LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlDWEFJQkFBS0JnUUNJNnNNK2Mxb2pzeWxNUGQ4RzdlK3VoeWNZdVRtQnFMSmtGTXdDUWVWZnRQMnU2TWNtCkRrWUtRanpPZE5EcUpPSTRsby9lbytPNDdqNWd1bzBMeFNmNDJqZUpkU09VTlZiWHR0WG43cHJmQzQzejRGM0QKamRQTmJEL3U0d2NuUHZQTVV5c3JUQ0RpWjVzRStHUitmdVdrWGpUVEZhcWRGOU9iMzdnOEZ6ZnZuUUlEQVFBQgpBb0dBU2dBQWlKZFY1NmVrc1hWYlBtYUpQWjRFam9ORnhvTkQ3MzJpQ2JKTjQ1MXg0d0FpNnJtYU4xODNlQ3FBCjQ1d052S0g3bmt5Yi9zNmRYakJWblQvdzZ1a2lLeTVzZUtvSUdhMm1iUVpocFpaU3dDUDljK0FRVW55aHloU1EKWk1vS01JMW1lc3ZhK2pUSlFJZ2JsSXhQLzBPT0VaelJkK3ZqRkYxdUFLZmlzZzBDUVFEeGtQOVJMZWhySUtScApXb045ajkwaFdFWHQvR1lQYXRhMW1qWko0WnAySHFsa0VVaUkzL2hJQ0haOTkrUWVnZkpNdTRtT2RGbUpWeVhQCmYrZnpLckh6QWtFQWtSa01KLzY1N2lCS0J2cDYvZ2VBb0FFSU4rR29yUnJBcVJLSDYySWVyRFNHcHhoRDlDWHkKNkFGYlZicnJ6UFpFOGhyTHJkc2tzWGR2dFBOTXRHYXNMd0pBU1U5WXZKa3pETGZXVFliRG11cDdFSENLb0dQVgowVjM2RlJqYzJ1VVZqRDFYNk45NTVOZ2JzRGlwUlNkaTJvTlROa2cvd2JTN3EzdUFKUTNMSmJmU1V3SkFkcmE3CmoyMkZ5aUo0N3NTNUpHWVhBdEpWV3dNeDhvOVUyZi9qWE41bW9oWkhwU2JoVWp4S1JTLzIvbWwweTdraUo4TnMKcWM0R2MzeDQxTi9LL2o2UzJRSkJBQXhuSEE4aTFzQWJzZG5ZZXZsbGRyVnJUYjNLNnBobVZRWjJ4TTJ5NWY0SgpKOEV6Zkw0MEFDTmtENzhQVTA3c0NDdjF1TXVRVEtNeitKVzJMMzNycDFJPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=","base64")
+    );
+  }
+
+  let issuer = localStorage.getItem("issuer");
+  if (!issuer) {
+    // generate random issuer on first load
+    issuer = "http://zliau.com/issuer/" + Math.floor(Math.random() * 100000000)
+    localStorage.setItem("issuer", issuer);
+  }
+  $("#issuer").val(issuer);
 
   var userControl = $("#signedInUser");
   var cookies = document.cookie.split(";");
@@ -46803,17 +46887,11 @@ $(function() {
         $("#signedInAt").text(data.signedInAt);
         $("#nameIdentifier").val(data.nameIdentifier);
         $("#callbackUrl").val(data.callbackUrl);
-        $("#issuer").val(data.issuer);
         $("#authnContextClassRef").val(data.authnContextClassRef);
         $("#nameIdentifierFormat").val(data.nameIdentifierFormat);
       } catch (e) {
         $("#signedInAt").text("ERROR: " + e.message);
       }
-    } else {
-      // generate random issuer on first load
-      $("#issuer").val(
-        "http://zliau.com/issuer/" + Math.floor(Math.random() * 100000000)
-      );
     }
   });
 
@@ -46829,97 +46907,7 @@ $(function() {
     logout();
   });
 
-  $("#generateKeyAndCert").click(function() {
-    var pki = window.forge.pki;
-    var keypair = pki.rsa.generateKeyPair({ bits: 1024 });
-    var cert = pki.createCertificate();
-    cert.publicKey = keypair.publicKey;
-    cert.serialNumber = "01";
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setFullYear(
-      cert.validity.notBefore.getFullYear() + 1
-    );
-    var attrs = [
-      {
-        name: "commonName",
-        value: "capriza.com"
-      },
-      {
-        name: "countryName",
-        value: "US"
-      },
-      {
-        shortName: "ST",
-        value: "Virginia"
-      },
-      {
-        name: "localityName",
-        value: "Blacksburg"
-      },
-      {
-        name: "organizationName",
-        value: "Samling"
-      },
-      {
-        shortName: "OU",
-        value: "Samling"
-      }
-    ];
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.setExtensions([
-      {
-        name: "basicConstraints",
-        cA: true
-      },
-      {
-        name: "keyUsage",
-        keyCertSign: true,
-        digitalSignature: true,
-        nonRepudiation: true,
-        keyEncipherment: true,
-        dataEncipherment: true
-      },
-      {
-        name: "extKeyUsage",
-        serverAuth: true,
-        clientAuth: true,
-        codeSigning: true,
-        emailProtection: true,
-        timeStamping: true
-      },
-      {
-        name: "nsCertType",
-        client: true,
-        server: true,
-        email: true,
-        objsign: true,
-        sslCA: true,
-        emailCA: true,
-        objCA: true
-      },
-      {
-        name: "subjectAltName",
-        altNames: [
-          {
-            type: 6, // URI
-            value: "http://capriza.com/samling"
-          }
-        ]
-      },
-      {
-        name: "subjectKeyIdentifier"
-      }
-    ]);
-    // self-sign certificate
-    cert.sign(keypair.privateKey);
-    // convert to PEM
-    var certVal = pki.certificateToPem(cert);
-    var privateKeyVal = pki.privateKeyToPem(keypair.privateKey);
-    $("#signatureCert").val(certVal);
-    $("#signatureKey").val(privateKeyVal);
-  });
+  $("#generateKeyAndCert").click(generateKeyAndCert);
 
   $("#saveKeyAndCert").click(function() {
     localStorage.setItem(
