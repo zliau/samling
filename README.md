@@ -1,5 +1,3 @@
-<div align="center"><img src="https://capriza.github.io/images/logos/logos-scorpion.svg" height="128" /></div>
-
 Samling
 ===
 
@@ -29,7 +27,7 @@ subsequent SAML responses.
 ## Installation
 
 ```bash
-git clone https://github.com/capriza/samling.git
+git clone https://github.com/zliau/samling.git
 cd samling
 npm install
 npm run build
